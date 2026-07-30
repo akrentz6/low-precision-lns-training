@@ -148,17 +148,14 @@ def seed_everything(seed: int) -> None:
 
 def configure_outputs(file_stem: str) -> tuple[logging.Logger, OutputPaths]:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = f"{file_stem}_train_{timestamp}.log"
+    output_dir = "./outputs"
+    os.makedirs(output_dir, exist_ok=True)
+    log_filename = os.path.join(output_dir, f"{file_stem}_train_{timestamp}.log")
     paths = OutputPaths(
-        history=f"{file_stem}_history_{timestamp}.json",
-        best_model=os.path.join(
-            "./checkpoints", f"{file_stem}_best_{timestamp}.pt"
-        ),
-        final_model=os.path.join(
-            "./checkpoints", f"{file_stem}_final_{timestamp}.pt"
-        ),
+        history=os.path.join(output_dir, f"{file_stem}_history_{timestamp}.json"),
+        best_model=os.path.join(output_dir, f"{file_stem}_best_{timestamp}.pt"),
+        final_model=os.path.join(output_dir, f"{file_stem}_final_{timestamp}.pt"),
     )
-    os.makedirs("./checkpoints", exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(message)s",
