@@ -258,7 +258,7 @@ def create_optimizer(model: nn.Module, args: argparse.Namespace):
     )
 
 
-def create_scheduler(optimizer, epochs: int):
+def create_scheduler(optimizer, epochs: int, initial_lr: float):
     warmup_epochs = min(5, epochs)
     linear_scheduler = lr_scheduler.LinearLR(
         optimizer,
@@ -269,7 +269,7 @@ def create_scheduler(optimizer, epochs: int):
     cosine_scheduler = lr_scheduler.CosineAnnealingLR(
         optimizer,
         T_max=max(1, epochs - warmup_epochs),
-        eta_min=1e-4,
+        eta_min=initial_lr * 1e-3,
     )
     return lr_scheduler.SequentialLR(
         optimizer,
@@ -427,7 +427,7 @@ def run_experiment(config: ExperimentConfig, seed: int = 42) -> None:
     model = config.model_factory(config.num_classes, LNS16, args.device)
     criterion = nn.NLLLoss()
     optimizer = create_optimizer(model, args)
-    scheduler = create_scheduler(optimizer, args.epochs)
+    scheduler = create_scheduler(optimizer, args.epochs, args.lr)
     log_configuration(logger, config, args)
 
     history = []
