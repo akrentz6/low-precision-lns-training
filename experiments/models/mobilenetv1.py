@@ -48,7 +48,7 @@ class MobileNetV1(nn.Module):
         super().__init__()
 
         # the initial spatial downsampling is disabled for CIFAR10/100 datasets as input images are small (32x32)
-        first_stride = 1 if self.cifar else 2
+        first_stride = 1 if cifar else 2
         self.stem = nn.Sequential(
             nn.Conv2d(in_channels, 32, kernel_size=3, stride=first_stride,
                       padding=1, bias=False, dtype=dtype, device=device),
