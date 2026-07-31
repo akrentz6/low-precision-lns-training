@@ -222,6 +222,7 @@ class Madam(torch.optim.Optimizer):
         lr=0.01,
         beta=0.999,
         eps=1e-8,
+        p_scale=3.0,
         g_bound=10.0,
         use_pow=False,
         *,
@@ -233,6 +234,8 @@ class Madam(torch.optim.Optimizer):
             raise ValueError(f"Invalid beta parameter: {beta}")
         if eps <= 0.0:
             raise ValueError(f"Invalid epsilon value: {eps}")
+        if p_scale <= 0.0:
+            raise ValueError(f"Invalid weight bound: {p_scale}")
         if g_bound <= 0.0:
             raise ValueError(f"Invalid gradient bound: {g_bound}")
 
@@ -240,6 +243,7 @@ class Madam(torch.optim.Optimizer):
             lr=lr,
             beta=beta,
             eps=eps,
+            p_scale=p_scale,
             g_bound=g_bound,
             use_pow=use_pow,
             maximize=maximize,
@@ -266,6 +270,8 @@ class Madam(torch.optim.Optimizer):
 
                 state = self.state[param]
                 if not state:
+                    rms = torch.sqrt(torch.mean(param * param))
+                    state["max"] = group["p_scale"] * rms
                     state["step"] = 0
                     state["exp_avg_sq"] = torch.zeros_like(param)
 
@@ -288,7 +294,7 @@ class Madam(torch.optim.Optimizer):
                     updated = param * torch.exp(delta)
                 else:
                     updated = param * (1.0 + delta)
-                param.copy_(updated)
+                param.copy_(updated.clamp(min=-state["max"], max=state["max"]))
 
         return loss
 
