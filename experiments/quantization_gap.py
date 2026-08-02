@@ -215,6 +215,14 @@ def parse_args() -> argparse.Namespace:
         "--eps", type=float, default=1e-8, help="Madam epsilon (default: 1e-8)"
     )
     parser.add_argument(
+        "--p-scale",
+        "--p_scale",
+        dest="p_scale",
+        type=float,
+        default=3.0,
+        help="Madam weight bound (default: 3)",
+    )
+    parser.add_argument(
         "--g-bound",
         "--g_bound",
         dest="g_bound",
@@ -261,8 +269,8 @@ def parse_args() -> argparse.Namespace:
         parser.error("--weight-decay must be nonnegative")
     if not 0.0 < args.beta < 1.0:
         parser.error("--beta must be between 0 and 1")
-    if args.eps <= 0.0 or args.g_bound <= 0.0:
-        parser.error("--eps and --g-bound must be positive")
+    if args.eps <= 0.0 or args.p_scale <= 0.0 or args.g_bound <= 0.0:
+        parser.error("--eps, --p-scale, and --g-bound must be positive")
     if any(name.startswith("lns") for name in args.formats):
         if not args.device.startswith("cuda"):
             parser.error("LNS probes require a CUDA device")
@@ -432,6 +440,7 @@ def create_trajectory_optimizer(
         lr=args.lr,
         beta=args.beta,
         eps=args.eps,
+        p_scale=args.p_scale,
         g_bound=args.g_bound,
         use_pow=True,
     )
@@ -483,6 +492,7 @@ def create_shadow_optimizer(
             lr=lr,
             beta=args.beta,
             eps=args.eps,
+            p_scale=args.p_scale,
             g_bound=args.g_bound,
             use_pow=True,
         )
@@ -500,6 +510,7 @@ def create_shadow_optimizer(
         lr=lr,
         beta=args.beta,
         eps=args.eps,
+        p_scale=args.p_scale,
         g_bound=args.g_bound,
         use_pow=True,
     )

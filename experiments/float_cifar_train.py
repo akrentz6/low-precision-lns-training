@@ -135,6 +135,18 @@ def parse_args(config: ExperimentConfig) -> argparse.Namespace:
         default=0.999,
         help="Madam beta parameter (default: 0.999)",
     )
+    parser.add_argument(
+        "--p_scale",
+        type=float,
+        default=3.0,
+        help="Madam weight bound (default: 3.0)",
+    )
+    parser.add_argument(
+        "--g_bound",
+        type=float,
+        default=10.0,
+        help="Madam gradient bound (default: 10.0)",
+    )
     return parser.parse_args()
 
 
@@ -308,7 +320,12 @@ def create_optimizer(model: nn.Module, args: argparse.Namespace):
             weight_decay=args.weight_decay,
         )
     return Madam(
-        model.parameters(), lr=args.lr, beta=args.beta, use_pow=True
+        model.parameters(),
+        lr=args.lr,
+        beta=args.beta,
+        p_scale=args.p_scale,
+        g_bound=args.g_bound,
+        use_pow=True,
     )
 
 
