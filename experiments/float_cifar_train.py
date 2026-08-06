@@ -371,11 +371,13 @@ def log_configuration(
         )
     else:
         logger.info(
-            "Hyperparameters: epochs=%s, batch_size=%s, lr=%s, beta=%s",
+            "Hyperparameters: epochs=%s, batch_size=%s, lr=%s, beta=%s, p_scale=%s, g_bound=%s",
             args.epochs,
             args.batch_size,
             args.lr,
             args.beta,
+            args.p_scale,
+            args.g_bound,
         )
 
 
