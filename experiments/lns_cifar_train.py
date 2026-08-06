@@ -80,6 +80,11 @@ def parse_args(config: ExperimentConfig) -> argparse.Namespace:
         help="Use LNS32 for reduction accumulators (default: False)",
     )
     parser.add_argument(
+        "--lpvip",
+        action="store_true",
+        help="Use LPVIP for LNS32 reduction accumulators (default: False)",
+    )
+    parser.add_argument(
         "--accumulator_prec",
         type=int,
         default=16,
@@ -164,7 +169,10 @@ def parse_args(config: ExperimentConfig) -> argparse.Namespace:
         default=10.0,
         help="Madam gradient bound (default: 10.0)",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.lpvip:
+        args.accumulator = "lpvip"
+    return args
 
 
 def seed_everything(seed: int) -> None:
