@@ -274,6 +274,11 @@ def parse_args() -> argparse.Namespace:
     if any(name.startswith("lns") for name in args.formats):
         if not args.device.startswith("cuda"):
             parser.error("LNS probes require a CUDA device")
+    if "madam" in args.optimizers and "lns16" in args.formats and "lns32" in args.formats:
+        parser.error(
+            "lns16 Madam uses LNS32 at precision 16 for reductions; "
+            "probe the lns32 format in a separate run"
+        )
     return args
 
 
@@ -340,14 +345,18 @@ def configure_logger(path: str) -> logging.Logger:
 
 def configure_lns(args: argparse.Namespace) -> None:
     table_stem = os.path.join(args.output_dir, "tab")
-    if "lns32" in args.formats:
+    use_madam_accumulator = "lns16" in args.formats and "madam" in args.optimizers
+    # use LNS32 for madam reductions as this is used to match the RMS norm value
+    # of bfloat16 and float16. LNS32 reductions are not involved in the optimizer step.
+    if "lns32" in args.formats or use_madam_accumulator:
         LNS32.set_prec(
-            args.lns_prec,
-            table=args.table,
+            23 if use_madam_accumulator else args.lns_prec,
+            table=False if use_madam_accumulator else args.table,
             table_device=args.device,
             filestem=table_stem,
         )
-        LNS32.enable_triton()
+        if "lns32" in args.formats:
+            LNS32.enable_triton()
     if "lns16" in args.formats:
         LNS16.set_prec(
             args.lns_prec,
@@ -355,7 +364,9 @@ def configure_lns(args: argparse.Namespace) -> None:
             table_device=args.device,
             filestem=table_stem,
         )
-        LNS16.enable_triton()
+        LNS16.enable_triton(
+            accumulator="lns32" if use_madam_accumulator else False
+        )
 
 
 def create_model(
